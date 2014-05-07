@@ -11,6 +11,8 @@ public class MapHex : MonoBehaviour {
 	private GameObject UL,UU,UR,DL,DD,DR;
 	public bool isSeed = false;
 	private int xCord, yCord;
+	public float temperature;
+
 
 	private void Start(){
 		chooseSprite();
@@ -65,6 +67,8 @@ public class MapHex : MonoBehaviour {
 		xCord = x;
 		yCord = y;
 		terrain = input;
+		temperature = (Mathf.Abs (yCord-WorldMap.height/2f))/WorldMap.height*2;
+		temperature += Random.Range (-0.05f,0.05f);
 	}
 
 	public void setTerrain(terrainType input){
