@@ -6,11 +6,11 @@ public class MapHex : MonoBehaviour {
 
 	public Sprite[] tileArt;
 
-	private List<GameObject> neighborList;
+	public List<GameObject> neighborList;
 	private terrainType terrain;
-	public GameObject UL,UU,UR,DL,DD,DR;
-	private bool isSeed = false;
-	public int xCord, yCord;
+	private GameObject UL,UU,UR,DL,DD,DR;
+	public bool isSeed = false;
+	private int xCord, yCord;
 
 	private void Start(){
 		chooseSprite();
@@ -70,7 +70,7 @@ public class MapHex : MonoBehaviour {
 	public void setTerrain(terrainType input){
 		terrain = input;
 	}
-
+	
 	public void setSeed(){
 		isSeed = true;
 	}
