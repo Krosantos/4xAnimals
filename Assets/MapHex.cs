@@ -11,11 +11,29 @@ public class MapHex : MonoBehaviour {
 	private GameObject UL,UU,UR,DL,DD,DR;
 	public bool isSeed = false;
 	private int xCord, yCord;
-	public float temperature;
+	public float temperature, rainfall;
+	public int contIndex;
 
 
 	private void Start(){
 		chooseSprite();
+	}
+
+	public void determineMountain(){
+		float mountChance = 0f;
+		float rand;
+		for(int i=0;i<neighborList.Count;i++){
+			if(neighborList[i].GetComponent<MapHex>().contIndex != this.contIndex){
+				mountChance += 0.1f;
+			}
+		}
+		rand = Random.value;
+		if(rand <= mountChance){
+			setTerrain(terrainType.Mountain);
+		}
+		else if(rand/2f <= mountChance){
+			setTerrain(terrainType.Hill);
+		}
 	}
 
 	public void chooseSprite(){
@@ -67,6 +85,7 @@ public class MapHex : MonoBehaviour {
 		xCord = x;
 		yCord = y;
 		terrain = input;
+		rainfall = 0.5f;
 		temperature = (Mathf.Abs (yCord-WorldMap.height/2f))/WorldMap.height*2;
 		temperature += Random.Range (-0.05f,0.05f);
 	}

@@ -11,6 +11,7 @@ public class WorldMap : MonoBehaviour {
 	public GameObject hex;
 	public float landChance;
 
+
 	private void Awake(){
 		seedList = new List<MapHex>();
 		landTiles = new List<MapHex>();
@@ -20,11 +21,12 @@ public class WorldMap : MonoBehaviour {
 		continents = 3;
 		contMaxSize = 70;
 		islands = 10;
-		islMaxSize = 25;
+		islMaxSize = 20;
 		spawnHex();
 		chooseSeeds();
 		growContinents();
 		sprinkleIslands();
+		checkMountains();
 
 
 		//InitHex now assigns appropriate temperature.
@@ -79,6 +81,7 @@ public class WorldMap : MonoBehaviour {
 			randX = Random.Range ((width/continents)*i,(width/continents)*(i+1));
 			randY = Random.Range ((height/10),height-(height/10));
 			mapScripts[randX,randY].setSeed();
+			mapScripts[randX,randY].contIndex = i+1;
 			seedList.Add (mapScripts[randX,randY]);
 			landTiles.Add (mapScripts[randX,randY]);
 			seaTiles.Remove(mapScripts[randX,randY]);
@@ -146,6 +149,15 @@ public class WorldMap : MonoBehaviour {
 
 	}
 
+	public void checkMountains(){
+		for(int i=0;i<landTiles.Count;i++){
+			landTiles[i].determineMountain();
+
+			//If I feel like my mountains are being overrideen too much.
+			landTiles.Remove(landTiles[i]);
+		}
+	}
+
 	/*private void addFeatures(List<MapHex> sourceList, terrainType terrain, int seedCount, int passes, float convChance){
 		List<MapHex> openList = new List<MapHex>();
 		List<MapHex> closedList = new List<MapHex>();
@@ -178,8 +190,10 @@ public class WorldMap : MonoBehaviour {
 
 	private void addNeighbours(MapHex input, List<MapHex> targetList, List<MapHex> blackList){
 		foreach(GameObject Hex in input.neighborList){
-			if(!blackList.Contains(Hex.GetComponent<MapHex>()))
-			targetList.Add (Hex.GetComponent<MapHex>());
+			if(!blackList.Contains(Hex.GetComponent<MapHex>())){
+				targetList.Add (Hex.GetComponent<MapHex>());
+				Hex.GetComponent<MapHex>().contIndex = input.contIndex;
+			}
 		}
 	}
 
