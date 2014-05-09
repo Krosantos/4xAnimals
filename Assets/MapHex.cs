@@ -11,29 +11,19 @@ public class MapHex : MonoBehaviour {
 	private GameObject UL,UU,UR,DL,DD,DR;
 	public bool isSeed = false;
 	private int xCord, yCord;
-	public float temperature, rainfall;
+	public float temperature;
 	public int contIndex;
 
 
 	private void Start(){
-		chooseSprite();
-	}
 
-	public void determineMountain(){
-		float mountChance = 0f;
-		float rand;
-		for(int i=0;i<neighborList.Count;i++){
-			if(neighborList[i].GetComponent<MapHex>().contIndex != this.contIndex){
-				mountChance += 0.1f;
-			}
-		}
-		rand = Random.value;
-		if(rand <= mountChance){
-			setTerrain(terrainType.Mountain);
-		}
-		else if(rand/2f <= mountChance){
-			setTerrain(terrainType.Hill);
-		}
+		chooseSprite();
+
+		//Visualize temp/rainfall.
+		//gameObject.GetComponent<SpriteRenderer>().color = new Color(rainfall,1f,1f);
+		//gameObject.GetComponent<SpriteRenderer>().color = new Color(1f,1f-temperature,1f-temperature);
+
+
 	}
 
 	public void chooseSprite(){
@@ -85,8 +75,7 @@ public class MapHex : MonoBehaviour {
 		xCord = x;
 		yCord = y;
 		terrain = input;
-		rainfall = 0.5f;
-		temperature = (Mathf.Abs (yCord-WorldMap.height/2f))/WorldMap.height*2;
+		temperature = 1-(Mathf.Abs (yCord-WorldMap.height/2f))/WorldMap.height*2;
 		temperature += Random.Range (-0.05f,0.05f);
 	}
 
@@ -96,6 +85,47 @@ public class MapHex : MonoBehaviour {
 	
 	public void setSeed(){
 		isSeed = true;
+	}
+
+	public bool freezeEdges(){
+		if (temperature <= 0.16f){
+			setTerrain(terrainType.Tundra);
+			return true;
+		}
+		else return false;
+	}
+
+	public void determineFlora(float forestChance){
+		bool nearDesert = false;
+		float rand;
+		for(int i=0;i<neighborList.Count;i++){
+			if(neighborList[i].GetComponent<MapHex>().terrain == terrainType.Desert){
+				nearDesert = true;
+			}
+		}
+		rand = Random.value;
+		if(rand <= forestChance && !nearDesert){
+			setTerrain (terrainType.Forest);
+			if(temperature >= 0.85f) setTerrain(terrainType.Jungle);
+		}
+
+	}
+
+	public void determineMountain(){
+		float mountChance = 0f;
+		float rand;
+		for(int i=0;i<neighborList.Count;i++){
+			if(neighborList[i].GetComponent<MapHex>().contIndex != this.contIndex){
+				mountChance += 0.1f;
+			}
+		}
+		rand = Random.value;
+		if(rand <= mountChance){
+			setTerrain(terrainType.Mountain);
+		}
+		else if(rand/2f <= mountChance){
+			setTerrain(terrainType.Hill);
+		}
 	}
 
 	public void mapNeighbours(){

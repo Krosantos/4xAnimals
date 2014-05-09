@@ -9,7 +9,7 @@ public class WorldMap : MonoBehaviour {
 	static public MapHex[,] mapScripts;
 	static public List<MapHex> seedList, landTiles, seaTiles;
 	public GameObject hex;
-	public float landChance;
+	public float landChance, forestChance;
 
 
 	private void Awake(){
@@ -22,27 +22,34 @@ public class WorldMap : MonoBehaviour {
 		contMaxSize = 70;
 		islands = 10;
 		islMaxSize = 20;
+		//StartCoroutine ("buildWorld");
 		spawnHex();
 		chooseSeeds();
 		growContinents();
 		sprinkleIslands();
 		checkMountains();
+		checkTundra();
+		addLandFeatures (landTiles, terrainType.Desert,3,15,0.1f);
+		checkFlora();
+		addSeaFeatures (seaTiles, terrainType.Reef, 10,5, 0.07f);
 
-
-		//InitHex now assigns appropriate temperature.
-		//Rainfall is assumed typical, with wet and arid zones bloomed from seeds.
-
-
-		//The following works, but a better system will account for neighbouring tiles when determining.
-		//This implies I'm gonna need to carefully determine which features grow in which order.
-		/*addFeatures (landTiles, terrainType.Forest,5,30,0.03f);
-		addFeatures (landTiles, terrainType.Mountain,12,3,0.1f);
-		addFeatures (landTiles, terrainType.Desert,3,15,0.06f);
-		addFeatures (landTiles, terrainType.Jungle,5,3,0.1f);
-		addFeatures (landTiles, terrainType.Hill,10,15,0.01f);
-		addFeatures (seaTiles, terrainType.Reef, 10,5, 0.07f);*/
 	}
 
+	/*private IEnumerator buildWorld(){
+		spawnHex();
+		chooseSeeds();
+		growContinents();
+		yield return new WaitForSeconds(0.1f);
+		sprinkleIslands();
+		checkMountains();
+		yield return new WaitForSeconds(0.1f);
+		StartCoroutine (makeItRain(3,15));
+		yield return new WaitForSeconds(0.1f);
+		dryZones(2,20);
+		yield return new WaitForSeconds(0.1f);
+		checkFlora();
+		updateTiles();
+	}*/
 
 	private void spawnHex(){
 		GameObject temp;
@@ -72,6 +79,14 @@ public class WorldMap : MonoBehaviour {
 		}
 		foreach(MapHex hex in mapScripts){
 			hex.mapNeighbours();
+		}
+	}
+
+	public void updateTiles(){
+		for(int x=0;x<mapScripts.GetLength(0);x++){
+			for(int y=0;y<mapScripts.GetLength(1);y++){
+				mapScripts[x,y].chooseSprite();
+			}
 		}
 	}
 
@@ -119,7 +134,6 @@ public class WorldMap : MonoBehaviour {
 	private void sprinkleIslands(){
 		List<MapHex> openList = new List<MapHex>();
 		List<MapHex> closedList = new List<MapHex>();
-		List<MapHex> isleSeeds = new List<MapHex>();
 		int rand;
 
 		//Choose a few seeds from seaTiles.
@@ -127,7 +141,6 @@ public class WorldMap : MonoBehaviour {
 			rand = Random.Range(0,seaTiles.Count);
 			seaTiles[rand].setTerrain (terrainType.Plain);
 			landTiles.Add (seaTiles[rand]);
-			isleSeeds.Add (seaTiles[rand]);
 			addNeighbours(seaTiles[rand],openList,closedList);
 			seaTiles.Remove(seaTiles[rand]);
 		}
@@ -153,40 +166,29 @@ public class WorldMap : MonoBehaviour {
 		for(int i=0;i<landTiles.Count;i++){
 			landTiles[i].determineMountain();
 
-			//If I feel like my mountains are being overrideen too much.
-			landTiles.Remove(landTiles[i]);
+			//If I feel like my mountains are being overidden too much.
+			//landTiles.Remove(landTiles[i]);
 		}
 	}
 
-	/*private void addFeatures(List<MapHex> sourceList, terrainType terrain, int seedCount, int passes, float convChance){
-		List<MapHex> openList = new List<MapHex>();
-		List<MapHex> closedList = new List<MapHex>();
-		List<MapHex> seeds = new List<MapHex>();
-		int rand;
-		
-		//Choose a few seeds.
-		for(int i=0;i<seedCount;i++){
-			rand = Random.Range(0,sourceList.Count);
-			sourceList[rand].setTerrain (terrain);
-			seeds.Add (sourceList[rand]);
-			addNeighbours(sourceList[rand],openList,closedList);
-			sourceList.Remove(sourceList[rand]);
-		}
-		
-		//Grow 'em like continents.
-		for(int i=0;i<passes;i++){
-			for(int j=0;j<openList.Count;j++){
-				
-				if(Random.value <= convChance){
-					openList[j].setTerrain(terrain);
-					closedList.Add(openList[j]);
-					sourceList.Remove(openList[j]);
-					addNeighbours(openList[j],openList,closedList);
-					
-				}
+	private void checkTundra(){
+		List<MapHex> temp = new List<MapHex>();
+		for(int i=0;i<landTiles.Count;i++){
+			if(landTiles[i].freezeEdges()){
+				temp.Add(landTiles[i]);
 			}
 		}
-	}*/
+		for(int i=0;i<temp.Count;i++){
+			landTiles.Remove(temp[i]);
+		}
+		landTiles.TrimExcess();
+	}
+
+	private void checkFlora(){
+		for(int i=0;i<landTiles.Count;i++){
+			landTiles[i].determineFlora(forestChance);
+		}
+	}
 
 	private void addNeighbours(MapHex input, List<MapHex> targetList, List<MapHex> blackList){
 		foreach(GameObject Hex in input.neighborList){
@@ -197,4 +199,68 @@ public class WorldMap : MonoBehaviour {
 		}
 	}
 
+	private void addNeighbours(MapHex input, List<MapHex> targetList, List<MapHex> blackList, List<MapHex> proofList){
+		foreach(GameObject Hex in input.neighborList){
+			if(!blackList.Contains(Hex.GetComponent<MapHex>()) && proofList.Contains(Hex.GetComponent<MapHex>())){
+				targetList.Add (Hex.GetComponent<MapHex>());
+				Hex.GetComponent<MapHex>().contIndex = input.contIndex;
+			}
+		}
+	}
+
+	private void addLandFeatures(List<MapHex> sourceList, terrainType terrain, int seedCount, int passes, float convChance){
+		List<MapHex> openList = new List<MapHex>();
+		List<MapHex> closedList = new List<MapHex>();
+		int rand;
+
+		sourceList.TrimExcess();
+		//Choose a few seeds.
+		for(int i=0;i<seedCount;i++){
+			rand = Random.Range(0,sourceList.Count);
+			sourceList[rand].setTerrain (terrain);
+			addNeighbours(sourceList[rand],openList,closedList,landTiles);
+			sourceList.Remove(sourceList[rand]);
+		}
+		
+		//Grow 'em like continents.
+		for(int i=0;i<passes;i++){
+			for(int j=0;j<openList.Count;j++){
+				
+				if(Random.value <= convChance){
+					openList[j].setTerrain(terrain);
+					addNeighbours(openList[j],openList,closedList,landTiles);
+					
+				}
+				closedList.Add(openList[j]);
+				sourceList.Remove(openList[j]);
+			}
+		}
+	}
+
+	private void addSeaFeatures(List<MapHex> sourceList, terrainType terrain, int seedCount, int passes, float convChance){
+		List<MapHex> openList = new List<MapHex>();
+		List<MapHex> closedList = new List<MapHex>();
+		int rand;
+		
+		//Choose a few seeds.
+		for(int i=0;i<seedCount;i++){
+			rand = Random.Range(0,sourceList.Count);
+			sourceList[rand].setTerrain (terrain);
+			addNeighbours(sourceList[rand],openList,closedList,seaTiles);
+			sourceList.Remove(sourceList[rand]);
+		}
+		
+		//Grow 'em like continents.
+		for(int i=0;i<passes;i++){
+			for(int j=0;j<openList.Count;j++){
+				
+				if(Random.value <= convChance){
+					openList[j].setTerrain(terrain);
+					addNeighbours(openList[j],openList,closedList,seaTiles);
+				}
+				closedList.Add(openList[j]);
+				sourceList.Remove(openList[j]);
+			}
+		}
+	}
 }
