@@ -12,7 +12,7 @@ public class MapHex : MonoBehaviour {
 	public bool isSeed = false;
 	private int xCord, yCord;
 	public float temperature;
-	public int contIndex;
+	public int contIndex, occIndex;
 
 
 	private void Start(){
@@ -22,8 +22,115 @@ public class MapHex : MonoBehaviour {
 		//Visualize temp/rainfall.
 		//gameObject.GetComponent<SpriteRenderer>().color = new Color(rainfall,1f,1f);
 		//gameObject.GetComponent<SpriteRenderer>().color = new Color(1f,1f-temperature,1f-temperature);
+	}
+
+	public GameObject findNearestType(terrainType target){
+		List<GameObject> openList = new List<GameObject>();
+		List<GameObject> tempAdd = new List<GameObject>();
+		List<GameObject> tempRem = new List<GameObject>();
+		List<GameObject> closedList = new List<GameObject>();
+
+		foreach(GameObject hex in neighborList){
+			if(hex.GetComponent<MapHex>().terrain == target){
+				return hex;
+			}
+			else {
+				foreach(GameObject subHex in hex.GetComponent<MapHex>().neighborList){
+					if(!openList.Contains (subHex)){
+						openList.Add(subHex);
+					}
+				}
+			}
+		}
+
+		while(openList.Count > 0){
+			foreach(GameObject hex in openList){
+				if(hex.GetComponent<MapHex>().terrain == target){
+					return hex;
+				}
+				else{
+					tempRem.Add(hex);
+					closedList.Add(hex);
+					foreach(GameObject subHex in hex.GetComponent<MapHex>().neighborList){
+						if(!openList.Contains (subHex) && !closedList.Contains (subHex)){
+							tempAdd.Add(subHex);
+						}
+					}
+				}
+			}
+			foreach(GameObject hex in tempAdd){
+				openList.Add (hex);
+			}
+			foreach(GameObject hex in tempRem){
+				openList.Remove (hex);
+			}
+			tempAdd.Clear ();
+			tempRem.Clear ();
+		}
+		return null;
+	}
 
 
+	public List<GameObject> getTilesWithin(int range){
+		List<GameObject> result = new List<GameObject>();
+		List<GameObject> temp = new List<GameObject>();
+		if(range == 0){
+			return result;
+		}
+
+		foreach(GameObject hex in neighborList){
+			result.Add(hex);
+			temp.Add(hex);
+		}
+
+		for(int i=1;i<range;i++){
+			foreach(GameObject hex in result){
+				foreach(GameObject subHex in hex.GetComponent<MapHex>().neighborList){
+					if(!temp.Contains(subHex)){
+						temp.Add(subHex);
+					}
+				}
+			}
+			foreach(GameObject subHex in temp){
+				if(!result.Contains (subHex)){
+					result.Add (subHex);
+				}
+			}
+			temp.Clear();
+		}
+		result.Remove (gameObject);
+		return result;
+	}
+
+	public int getTilesFrom(GameObject other){
+		int result = 1;
+		if(gameObject == other) return 0;
+		if(neighborList.Contains (other)) return result;
+
+		else{
+			List<GameObject> openList = new List<GameObject>();
+			List<GameObject> temp = new List<GameObject>();
+			foreach(GameObject hex in neighborList){
+				openList.Add(hex);
+				temp.Add(hex);
+			}
+			while(!openList.Contains(other)){
+				foreach(GameObject hex in openList){
+					foreach(GameObject subHex in hex.GetComponent<MapHex>().neighborList){
+						if(!temp.Contains (subHex)){
+							temp.Add (subHex);
+						}
+					}
+				}
+				foreach(GameObject subHex in temp){
+					if(!openList.Contains(subHex)){
+						openList.Add (subHex);
+					}
+				}
+				result++;
+			}
+			return result;
+		}
 	}
 
 	public void chooseSprite(){
@@ -81,6 +188,10 @@ public class MapHex : MonoBehaviour {
 
 	public void setTerrain(terrainType input){
 		terrain = input;
+	}
+
+	public terrainType getTerrain(){
+		return terrain;
 	}
 	
 	public void setSeed(){

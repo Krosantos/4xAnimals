@@ -18,3 +18,11 @@ public enum terrainType{
 	City,
 	Shore
 }
+
+public enum animalPhyla{
+	Amphibian,
+	Bird,
+	Reptile,
+	Mammal,
+	Fish
+}

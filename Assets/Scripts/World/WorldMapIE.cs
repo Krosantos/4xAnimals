@@ -2,9 +2,9 @@
 using System.Collections;
 using System.Collections.Generic;
 
-public class WorldMap : MonoBehaviour {
+public class WorldMapIE : MonoBehaviour {
 
-	public static int width, height, continents, contMaxSize, islands, islMaxSize;
+	public static int width, height, continents, contMaxSize, islands, islMaxSize, riverCount;
 	static public GameObject[,] mapTiles;
 	static public MapHex[,] mapScripts;
 	static public List<MapHex> seedList, landTiles, seaTiles;
@@ -18,40 +18,44 @@ public class WorldMap : MonoBehaviour {
 		seaTiles = new List<MapHex>();
 		width = 60;
 		height = 30;
-		continents = 3;
-		contMaxSize = 70;
+		continents = 4;
+		contMaxSize = 60;
 		islands = 10;
 		islMaxSize = 20;
-		//StartCoroutine ("buildWorld");
-		spawnHex();
-		chooseSeeds();
-		growContinents();
-		sprinkleIslands();
-		checkMountains();
-		checkTundra();
-		addLandFeatures (landTiles, terrainType.Desert,3,15,0.1f);
-		checkFlora();
-		addSeaFeatures (seaTiles, terrainType.Reef, 10,5, 0.07f);
+		riverCount = 4;
+
+		StartCoroutine ("buildWorld");
+
+		//spawnHex();
+		//chooseSeeds();
+		//growContinents();
+		//sprinkleIslands();
+		//checkMountains();
+		//checkTundra();
+		//addLandFeatures (landTiles, terrainType.Desert,3,15,0.1f);
+		//checkFlora();
+		//addSeaFeatures (seaTiles, terrainType.Reef, 10,5, 0.07f);
+		//Make rivers
 
 	}
 
-	/*private IEnumerator buildWorld(){
-		spawnHex();
-		chooseSeeds();
-		growContinents();
-		yield return new WaitForSeconds(0.1f);
-		sprinkleIslands();
+	private IEnumerator buildWorld(){
+		yield return spawnHex ();
+		yield return new WaitForSeconds(7f);
+		chooseSeeds ();
+		yield return growContinents ();
+		yield return sprinkleIslands ();
 		checkMountains();
-		yield return new WaitForSeconds(0.1f);
-		StartCoroutine (makeItRain(3,15));
-		yield return new WaitForSeconds(0.1f);
-		dryZones(2,20);
-		yield return new WaitForSeconds(0.1f);
-		checkFlora();
 		updateTiles();
-	}*/
+		checkTundra();
+		updateTiles ();
+		yield return addLandFeatures (landTiles, terrainType.Desert,3,15,0.1f);
+		checkFlora ();
+		updateTiles ();
+		yield return addSeaFeatures (seaTiles, terrainType.Reef, 10,5, 0.07f);
+	}
 
-	private void spawnHex(){
+	private IEnumerator spawnHex(){
 		GameObject temp;
 		mapTiles = new GameObject[width,height];
 		mapScripts = new MapHex[width,height];
@@ -75,6 +79,7 @@ public class WorldMap : MonoBehaviour {
 					seaTiles.Add (temp.GetComponent<MapHex>());
 					temp.GetComponent<MapHex>().initializeHex (terrainType.Ocean,x,y);
 				}
+				yield return new WaitForSeconds(0.01f);
 			}
 		}
 		foreach(MapHex hex in mapScripts){
@@ -104,7 +109,7 @@ public class WorldMap : MonoBehaviour {
 		}
 	}
 
-	private void growContinents(){
+	private IEnumerator growContinents(){
 		List<MapHex> openList = new List<MapHex>();
 		List<MapHex> closedList = new List<MapHex>();
 
@@ -127,11 +132,13 @@ public class WorldMap : MonoBehaviour {
 
 				}
 			}
+			updateTiles();
+			yield return new WaitForSeconds (0.01f);
 		}
 		
 	}
 
-	private void sprinkleIslands(){
+	private IEnumerator sprinkleIslands(){
 		List<MapHex> openList = new List<MapHex>();
 		List<MapHex> closedList = new List<MapHex>();
 		int rand;
@@ -158,6 +165,8 @@ public class WorldMap : MonoBehaviour {
 					
 				}
 			}
+			updateTiles ();
+			yield return new WaitForSeconds(0.01f);
 		}
 
 	}
@@ -165,9 +174,6 @@ public class WorldMap : MonoBehaviour {
 	public void checkMountains(){
 		for(int i=0;i<landTiles.Count;i++){
 			landTiles[i].determineMountain();
-
-			//If I feel like my mountains are being overidden too much.
-			//landTiles.Remove(landTiles[i]);
 		}
 	}
 
@@ -208,7 +214,7 @@ public class WorldMap : MonoBehaviour {
 		}
 	}
 
-	private void addLandFeatures(List<MapHex> sourceList, terrainType terrain, int seedCount, int passes, float convChance){
+	private IEnumerator addLandFeatures(List<MapHex> sourceList, terrainType terrain, int seedCount, int passes, float convChance){
 		List<MapHex> openList = new List<MapHex>();
 		List<MapHex> closedList = new List<MapHex>();
 		int rand;
@@ -220,6 +226,8 @@ public class WorldMap : MonoBehaviour {
 			sourceList[rand].setTerrain (terrain);
 			addNeighbours(sourceList[rand],openList,closedList,landTiles);
 			sourceList.Remove(sourceList[rand]);
+			updateTiles ();
+			yield return new WaitForSeconds(0.01f);
 		}
 		
 		//Grow 'em like continents.
@@ -234,10 +242,12 @@ public class WorldMap : MonoBehaviour {
 				closedList.Add(openList[j]);
 				sourceList.Remove(openList[j]);
 			}
+			updateTiles ();
+			yield return new WaitForSeconds(0.01f);
 		}
 	}
 
-	private void addSeaFeatures(List<MapHex> sourceList, terrainType terrain, int seedCount, int passes, float convChance){
+	private IEnumerator addSeaFeatures(List<MapHex> sourceList, terrainType terrain, int seedCount, int passes, float convChance){
 		List<MapHex> openList = new List<MapHex>();
 		List<MapHex> closedList = new List<MapHex>();
 		int rand;
@@ -248,6 +258,8 @@ public class WorldMap : MonoBehaviour {
 			sourceList[rand].setTerrain (terrain);
 			addNeighbours(sourceList[rand],openList,closedList,seaTiles);
 			sourceList.Remove(sourceList[rand]);
+			updateTiles ();
+			yield return new WaitForSeconds(0.01f);
 		}
 		
 		//Grow 'em like continents.
@@ -261,6 +273,8 @@ public class WorldMap : MonoBehaviour {
 				closedList.Add(openList[j]);
 				sourceList.Remove(openList[j]);
 			}
+			updateTiles ();
+			yield return new WaitForSeconds(0.01f);
 		}
 	}
 }
