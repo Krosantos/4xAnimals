@@ -9,15 +9,19 @@ public class MouseTracker : MonoBehaviour {
 		Ray mouseRay = Camera.main.ScreenPointToRay(Input.mousePosition);
 		RaycastHit rayHit = new RaycastHit();
 		if(Input.GetMouseButtonDown (0)){
-			if(Physics.Raycast(mouseRay, out rayHit, 100f)){
+			if(Physics.Raycast(mouseRay, out rayHit, 1000f)){
 				if(selected == rayHit.transform.gameObject){
 					selected = null;
 				}
 				else{
 					selected = rayHit.transform.gameObject;
+					Debug.Log ("Selected object is "+selected);
 				}
 			}
-			else selected = null;
+			else{
+				Debug.Log ("CLICK MISFIRE!!");
+				selected = null;
+			}
 		}
 	}
 

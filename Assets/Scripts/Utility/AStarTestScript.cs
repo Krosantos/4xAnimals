@@ -26,9 +26,32 @@ public class AStarTestScript : MonoBehaviour {
 	}
 
 	void Update () {
+
+		if(Input.GetKeyDown(KeyCode.R)){
+			Application.LoadLevel (0);
+		}
+
+		if(from != null){
+			to = MouseTracker.selected;
+		}
+		
+		if(to != null && to == MouseTracker.selected){
+			to.GetComponent<SpriteRenderer>().color = Color.magenta;
+		}
+		if(from == null) from = MouseTracker.selected;
+
+		if(from != null && from == MouseTracker.selected){
+			from.GetComponent<SpriteRenderer>().color = Color.cyan;
+		}
+
 		if(Input.GetKeyDown(KeyCode.Space)){
-			//AStar.aStar  (from, to, moveCost);
-			StartCoroutine(AStar.findPath (from,to,moveCost));
+			List<GameObject> winPath = AStar.findPath (from,to,moveCost);
+			if(winPath != null){
+				foreach(GameObject hex in winPath){
+					hex.GetComponent<SpriteRenderer>().color = Color.green;
+				}
+			}
+			//StartCoroutine(AStar.findPath (from,to,moveCost));
 		}
 	}
 }

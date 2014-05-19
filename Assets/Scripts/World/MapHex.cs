@@ -18,10 +18,6 @@ public class MapHex : MonoBehaviour {
 	private void Start(){
 
 		chooseSprite();
-
-		//Visualize temp/rainfall.
-		//gameObject.GetComponent<SpriteRenderer>().color = new Color(rainfall,1f,1f);
-		//gameObject.GetComponent<SpriteRenderer>().color = new Color(1f,1f-temperature,1f-temperature);
 	}
 
 	public GameObject findNearestType(terrainType target){
@@ -103,34 +99,16 @@ public class MapHex : MonoBehaviour {
 	}
 
 	public int getTilesFrom(GameObject other){
-		int result = 1;
-		if(gameObject == other) return 0;
-		if(neighborList.Contains (other)) return result;
+		int result = 0;
 
-		else{
-			List<GameObject> openList = new List<GameObject>();
-			List<GameObject> temp = new List<GameObject>();
-			foreach(GameObject hex in neighborList){
-				openList.Add(hex);
-				temp.Add(hex);
-			}
-			while(!openList.Contains(other)){
-				foreach(GameObject hex in openList){
-					foreach(GameObject subHex in hex.GetComponent<MapHex>().neighborList){
-						if(!temp.Contains (subHex)){
-							temp.Add (subHex);
-						}
-					}
-				}
-				foreach(GameObject subHex in temp){
-					if(!openList.Contains(subHex)){
-						openList.Add (subHex);
-					}
-				}
-				result++;
-			}
-			return result;
-		}
+		int firstPos = Mathf.Abs(other.GetComponent<MapHex>().yCord-this.yCord)+1;
+		int secondPos = Mathf.Abs(other.GetComponent<MapHex>().xCord-this.xCord)+1;
+		int thirdPos = Mathf.Abs((other.GetComponent<MapHex>().xCord-other.GetComponent<MapHex>().yCord)*-1 - (this.xCord-this.yCord)*-1)+1;
+
+		if(firstPos >= result)result = firstPos;
+		if(secondPos >= result)result = secondPos;
+		if(thirdPos >= result) result = thirdPos;
+		return result;
 	}
 
 	public void chooseSprite(){
