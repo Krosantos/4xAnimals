@@ -21,7 +21,6 @@ public abstract class AStar : MonoBehaviour {
 		gScore.Add (currentNode,0);
 		fScore.Add (currentNode,gScore[currentNode]+getHeuristic(nodeFrom,nodeTo));
 		openList.Add(currentNode);
-		int i=0;
 		while(openList.Count >0){
 			currentNode = getLowest(openList,fScore);
 			if(currentNode == nodeTo){
@@ -90,8 +89,34 @@ public abstract class AStar : MonoBehaviour {
 		return result;
 	}
 
-	private static List<GameObject> findMovableTiles(GameObject tile, int maxDist, Dictionary<terrainType,int> moveDict){
+	public static List<GameObject> findMovableTiles(GameObject tile, int maxDist, Dictionary<terrainType,int> moveDict){
+		List<GameObject> openList = new List<GameObject>();
+		List<GameObject> closedList = new List<GameObject>();
+		List<GameObject> result = new List<GameObject>();
+		Dictionary <GameObject, int> gScore = new Dictionary<GameObject, int>();
+		GameObject currentNode;
 
+		openList.Add(tile);
+		result.Add(tile);
+		gScore.Add (tile,0);
+		while(openList.Count > 0){
+			currentNode = openList[0];
+			foreach(GameObject hex in currentNode.GetComponent<MapHex>().neighborList){
+				int tempG = (gScore[currentNode]+moveDict[hex.GetComponent<MapHex>().getTerrain()]);
+				if(!openList.Contains(hex)&&!closedList.Contains(hex)&&tempG<=maxDist){
+					gScore.Add (hex,tempG);
+					openList.Add (hex);
+				}
+				else if(tempG<gScore[hex]&&gScore.ContainsKey(hex)){
+					gScore.Remove (hex);
+					gScore.Add (hex,tempG);
+				}
+			}
+			closedList.Add(currentNode);
+			openList.Remove(currentNode);
+			if(gScore[currentNode]<=maxDist)result.Add(currentNode);
+		}
+		return result;
 	}
 
 }

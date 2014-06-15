@@ -29,7 +29,7 @@ public class UnitBase : MonoBehaviour {
 
 	public void Update(){
 		if(MouseTracker.selected == gameObject){
-			tilesInMoveRange = tile.GetComponent<MapHex>().getTilesWithin(moveDist);
+			tilesInMoveRange = AStar.findMovableTiles (tile,moveDist,moveCost);
 			foreach(GameObject hex in tilesInMoveRange){
 				hex.GetComponent<SpriteRenderer>().color = new Color(0.75f,0f,0f,0.75f);
 			}
