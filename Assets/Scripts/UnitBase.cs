@@ -2,7 +2,7 @@
 using System.Collections;
 using System.Collections.Generic;
 
-public class UnitBase : MonoBehaviour {
+public class UnitBase : MonoBehaviour, Clickable {
 
 	public animalPhyla phyla;
 	public int hp, maxFuel, upKeep, maxAmmo, moveDist;
@@ -28,7 +28,7 @@ public class UnitBase : MonoBehaviour {
 	}
 
 	public void Update(){
-		if(MouseTracker.selected == gameObject){
+		/*if(MouseTracker.selected == gameObject){
 			tilesInMoveRange = AStar.findMovableTiles (tile,moveDist,moveCost);
 			foreach(GameObject hex in tilesInMoveRange){
 				hex.GetComponent<SpriteRenderer>().color = new Color(0.75f,0f,0f,0.75f);
@@ -48,7 +48,11 @@ public class UnitBase : MonoBehaviour {
 				hex.GetComponent<SpriteRenderer>().color = Color.white;
 			}
 			tilesInMoveRange.Clear();
-		}
+		}*/
+	}
+
+	public void onClick(){
+		Debug.Log ("OOOOOH, you got me!");
 	}
 
 	public void move(){
